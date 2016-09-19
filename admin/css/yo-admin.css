@@ -1,0 +1,87 @@
+/**
+* All of the CSS for your admin-specific functionality should be
+* included in this file.
+*/
+
+.allow-access {
+    max-width: 400px;
+    margin: 40px auto;
+    line-height: 1.4;
+    padding: 40px 20px;
+    background: #fff;
+    border: 1px solid #ccc;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.allow-access h3 {
+    margin-top: 0;
+}
+
+.action-btns {
+    text-align: right;
+}
+
+.allow-btn {
+    padding: 5px 20px 7px;
+    cursor: pointer;
+    line-height: 1.6;
+    border-radius: 3px;
+    background: #00abc9;
+    color: #fff;
+    font-size: 14px;
+    border: 0;
+}
+
+.deny-btn {
+    padding: 5px 20px 7px;
+    cursor: pointer;
+    line-height: 1.6;
+    border-radius: 3px;
+    background: #666;
+    color: #fff;
+    font-size: 14px;
+    border: 0;
+}
+
+.app-logo {
+    margin: 0 auto 20px;
+    display: block;
+    width: 75px;
+}
+
+#toplevel_page_yo .dashicons-admin-generic:before {
+    width: 18px;
+    content: "";
+    height: 18px;
+    background: url(yo-icon.png) no-repeat center center;
+    background-size: 18px auto;
+    opacity: 0.5;
+    display: inline-block;
+}
+
+#toplevel_page_yo .current .dashicons-admin-generic:before {
+    opacity: 1;
+}
+
+.toplevel_page_yo #wpcontent {
+    padding-left: 0 !important;
+}
+
+body.toplevel_page_yo, .toplevel_page_yo #wpwrap, .toplevel_page_yo #wpcontent, .toplevel_page_yo #wpbody, .toplevel_page_yo #wpbody-content, .toplevel_page_yo iframe {
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+.toplevel_page_yo #wpfooter {
+    display: none !important;
+}
+
+.toplevel_page_yo #wpbody-content {
+    padding-bottom: 0;
+}
+
+#yopifyYoBackEndIframe {
+    display: block;
+}
