@@ -2,7 +2,7 @@
 Contributors: Yopify
 Tags: plugin, sales, shop, store, e-commerce,ecommerce, notification, orders, woocommerce, wordpress, social, products, post, posts, integration, dashboard, cart, share, sharing, automatic, API
 Requires at least: 4.4
-Tested up to 4.6.1
+Tested up to: 4.6.1
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -68,7 +68,7 @@ With these settings, a potential customer visits your website and every 30 secon
 
 = Required Plugins =
 
-**[WooCommerce](https://wordpress.org/plugins/woocommerce/) by WooThemes - WooCommerce is a powerful, extendable eCommerce plugin that helps you sell anything. Beautifully.
+[WooCommerce](https://wordpress.org/plugins/woocommerce/) by WooThemes - WooCommerce is a powerful, extendable eCommerce plugin that helps you sell anything. Beautifully.
 
 
 == Installation ==
