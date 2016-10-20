@@ -4,7 +4,7 @@
  * Plugin Name:       Yo - Display Recent Sales in Real Time
  * Plugin URI:        https://yopify.com
  * Description:       Instantly replicate the atmosphere of a busy retail store and give your visitors the motivation and social proof to BUY!
- * Version:           1.0.0
+ * Version:           2.0
  * Author:            Yopify
  * Author URI:        http://yopify.com
  * License:           GPL-2.0+
@@ -19,38 +19,17 @@ if ( ! defined('WPINC')) {
     die;
 }
 
-$yopifyYoBaseUrl = 'https://yopify.com/wc/yo';
-$yopifyYoVersion = '1.0.0';
-$yopifyYoPublicKey = "-----BEGIN RSA PUBLIC KEY-----
-MIGJAoGBAOBmLnZ3KrnNB39wUitQ1+RykjAHmKyz/r2/21XqyV847gh1JUQbNGHj
-n29kUPki1FPbaVgDfd+RE+kAGsk020lOOFwKk/u9NyKzd1iewsxVHQzMsP1jZsRE
-70nQFDVEVfaM6Fz+g3kSz6neBYzL030RzzhMGH2vi5CPVN7nYy6dAgMBAAE=
------END RSA PUBLIC KEY-----";
-$yopifyYoPluginUrl = str_replace(home_url(), '', plugins_url('/', __FILE__));
+define('YOPIFY_YO_BASE_URL', 'https://yopify.com/api/yo');
+define('YOPIFY_YO_VERSION', '1.0');
+define('YOPIFY_YO_PLUGIN_URL', str_replace(home_url(), '', plugins_url('/', __FILE__)));
+
+if ( ! class_exists('YopifyYo_Client')) {
+    require_once plugin_dir_path(__FILE__) . 'includes/sdk/Client.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/sdk/Event.php';
+}
 
 require plugin_dir_path(__FILE__) . 'includes/yo-routes-and-functions.php';
 
-/**
- * Get yo configs
- * @return array
- */
-function getYoConfigs()
-{
-    global $yopifyYoBaseUrl, $yopifyYoVersion, $yopifyYoPublicKey, $yopifyYoPluginUrl;
-
-    return [
-        'yopifyYoBaseUrl'   => $yopifyYoBaseUrl ? $yopifyYoBaseUrl : 'https://yopify.com/wc/yo',
-        'yopifyYoVersion'   => $yopifyYoVersion ? $yopifyYoVersion : '1.0.0',
-        'yopifyYoPublicKey' => $yopifyYoPublicKey
-            ? $yopifyYoPublicKey
-            : '-----BEGIN RSA PUBLIC KEY-----
-MIGJAoGBAOBmLnZ3KrnNB39wUitQ1+RykjAHmKyz/r2/21XqyV847gh1JUQbNGHj
-n29kUPki1FPbaVgDfd+RE+kAGsk020lOOFwKk/u9NyKzd1iewsxVHQzMsP1jZsRE
-70nQFDVEVfaM6Fz+g3kSz6neBYzL030RzzhMGH2vi5CPVN7nYy6dAgMBAAE=
------END RSA PUBLIC KEY-----',
-        'yopifyYoPluginUrl' => $yopifyYoPluginUrl ? $yopifyYoPluginUrl : str_replace(home_url(), '', plugins_url('/', __FILE__))
-    ];
-}
 
 /**
  * The code that runs during plugin activation.
@@ -102,7 +81,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     add_action('admin_notices', function (){
         $class = 'notice notice-error';
         $message = __('<strong>Yo - Display Recent Sales in Real Time</strong> plugin requires to have <a href="https://wordpress.org/plugins/woocommerce/" target="_blank">WooCommerce</a> plugin installed.',
-            'woocommerce-plugin-fomo');
+            'woocommerce-plugin-yo');
 
         printf('<div class="%1$s"><p>%2$s</p></div>', $class, $message);
     });

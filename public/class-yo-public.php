@@ -98,14 +98,12 @@ class Yopify_Yo_Public
          * class.
          */
 
-        // wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/yo-public.js', array('jquery'), $this->version, false);
-
-        global $yopifyYoBaseUrl;
+        // wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/yo-public.js', array('jquery'), $this->version, false);;
 
         $clientId = get_option('yopify_yo_client_id');
 
         if ($clientId) {
-            wp_enqueue_script('yopify-yo-js', $yopifyYoBaseUrl . '/js/yo/' . $clientId . '/yo.js', false);
+            wp_enqueue_script('yopify-yo-js', YOPIFY_YO_BASE_URL . '/js/yo/' . $clientId . '/bootstrap.js', false);
         }
     }
 }

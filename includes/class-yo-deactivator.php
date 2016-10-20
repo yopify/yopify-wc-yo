@@ -32,33 +32,9 @@ class Yo_Deactivator
      */
     public static function deactivate()
     {
-        global $yopifyYoBaseUrl, $yopifyYoVersion;
-
-        $yoConfigs = getYoConfigs();
-        extract($yoConfigs);
-
-        $siteUrl = home_url();
-        $yopifyYoAccessToken = yopify_yo_get_access_token();
-
-        $signedPayload = yopify_yo_encrypt_data([
-            'url'          => $siteUrl,
-            'email'        => get_option('admin_email'),
-            'name'         => get_option('blogname'),
-            'access_token' => $yopifyYoAccessToken
-        ]);
-
-        $url = $yopifyYoBaseUrl . '/capture/webhook?topic=store.app.uninstalled&signed_payload=' . urlencode($signedPayload);
-
-        $http_args = array(
-            'body'        => json_encode([]),
-            'headers'     => array(
-                'Content-Type' => 'application/json'
-            ),
-            'httpversion' => '1.0',
-            'timeout'     => 60
-        );
-
-        return $response = wp_remote_post($url, $http_args);
+        delete_option('yopify_yo_wc_app_id');
+        delete_option('yopify_yo_access_token');
+        delete_option('yopify_yo_client_id');
     }
 
 }

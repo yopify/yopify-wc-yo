@@ -1,187 +1,18 @@
 <?php
 
-// Access via /wp-json/yo/v1/orders/count
-add_action('rest_api_init', function (){
-
-    // Get store details
-    register_rest_route('yo', '/v1/me', [
-        'methods'  => 'POST',
-        'callback' => 'yopify_yo_get_store_details',
-    ]);
-
-    // Order count
-    register_rest_route('yo', '/v1/orders/count', [
-        'methods'  => 'POST',
-        'callback' => function ($request){
-
-            if ( ! class_exists('YopifyYoPull')) {
-                require plugin_dir_path(__FILE__) . 'YopifyYoPull.php';
-            }
-
-            return YopifyYoPull::countOrders($request);
-        },
-    ]);
-
-    // Get orders
-    register_rest_route('yo', '/v1/orders', [
-        'methods'  => 'POST',
-        'callback' => function ($request){
-
-            if ( ! class_exists('YopifyYoPull')) {
-                require plugin_dir_path(__FILE__) . 'YopifyYoPull.php';
-            }
-
-            return YopifyYoPull::getOrders($request);
-        },
-    ]);
-});
-
+/**
+ * Push the latest order to Yo
+ */
 add_action('woocommerce_checkout_order_processed', function ($order_id){
-    if ( ! class_exists('YopifyYoPush')) {
-        require plugin_dir_path(__FILE__) . 'YopifyYoPush.php';
-    }
-
-    YopifyYoPush::pushNewOrderToWebhook($order_id);
+    catchSingleOrder($order_id);
 });
 
+add_action('wp_ajax_yopify_yo_set_access_token', 'yopify_yo_set_access_token');
+add_action('wp_ajax_yopify_yo_set_current_app', 'yopify_yo_set_current_app');
+add_action('wp_ajax_yopify_yo_sync_orders', 'yopify_yo_sync_orders');
+add_action('wp_ajax_yopify_yo_count_orders', 'yopify_yo_count_orders');
+add_action('wp_ajax_yopify_yo_get_access_tokens', 'yopify_yo_get_access_tokens');
 
-/**
- * Get client id from Yo server
- *
- * @param $storeUrl
- * @param $yopifyYoAccessToken
- *
- * @return mixed
- */
-function yopify_yo_get_client_id($storeUrl, $yopifyYoAccessToken)
-{
-    global $yopifyYoBaseUrl;
-
-    $yoConfigs = getYoConfigs();
-    extract($yoConfigs);
-
-    $timestamp = getUtcTimestamp();
-
-    $url = $yopifyYoBaseUrl . '/identify?url=' . urlencode($storeUrl) . '&t=' . $timestamp .
-           '&hmac=' . hash_hmac('sha256', $storeUrl . $timestamp, $yopifyYoAccessToken);
-
-    $response = wp_remote_get($url, [
-        'sslverify' => false,
-        'timeout'   => 30,
-    ]);
-
-    if (is_wp_error($response)) {
-
-        $errorMessage = $response->get_error_message();;
-        echo '<div id="message" class="error"><p>' . $errorMessage . '</p></div>';
-        die;
-
-    }else {
-
-        if ($response != null && isset($response['body'])) {
-            return json_decode($response['body'], true);
-        }
-    }
-
-    return null;
-}
-
-/**
- * Encrypt data
- *
- * @param $data
- *
- * @return string
- */
-function yopify_yo_encrypt_data($data)
-{
-    global $yopifyYoPublicKey;
-
-    $yoConfigs = getYoConfigs();
-    extract($yoConfigs);
-
-    if ( ! class_exists('Crypt_RSA')) {
-        include_once('phpseclib/Crypt/RSA.php');
-    }
-
-    $rsa = new Crypt_RSA();
-    $rsa->loadKey($yopifyYoPublicKey);
-
-    $encryptedData = base64_encode($rsa->encrypt(json_encode($data)));
-
-    return $encryptedData;
-}
-
-
-/**
- * Get store details
- *
- * @param $request
- *
- * @return array
- */
-function yopify_yo_get_store_details($request)
-{
-    global $yopifyYoPluginUrl;
-
-    $yoConfigs = getYoConfigs();
-    extract($yoConfigs);
-
-    $siteUrl = home_url();
-    $yopifyYoAccessToken = yopify_yo_get_access_token();
-
-    $requestBody = json_decode($request->get_body(), true);
-
-    if (count($requestBody) == 0) {
-        header('HTTP/1.0 401 Unauthorized');
-        exit();
-    }
-
-    if (yopifyYoVerifyRsaSignature($requestBody)) {
-        return [
-            't'         => isset($requestBody['t']) ? $requestBody['t'] : '',
-            'signature' => isset($requestBody['signature']) ? $requestBody['signature'] : '',
-            'payload'   => yopify_yo_encrypt_data([
-                'url'          => $siteUrl,
-                'email'        => get_option('admin_email'),
-                'name'         => get_option('blogname'),
-                'access_token' => $yopifyYoAccessToken,
-                'plugin_url'   => $yopifyYoPluginUrl
-            ])
-        ];
-    }else {
-        header('HTTP/1.0 401 Unauthorized');
-        exit();
-    }
-}
-
-
-/**
- * Verify Signature
- *
- * @param $data
- *
- * @return bool
- */
-function yopifyYoVerifyRsaSignature($data)
-{
-    global $yopifyYoPublicKey;
-
-    $yoConfigs = getYoConfigs();
-    extract($yoConfigs);
-
-    $timestamp = isset($data['t']) ? $data['t'] : null;
-    $signature = isset($data['signature']) ? $data['signature'] : null;
-
-    if ( ! class_exists('Crypt_RSA')) {
-        include_once('phpseclib/Crypt/RSA.php');
-    }
-
-    $rsa = new Crypt_RSA();
-    $rsa->loadKey($yopifyYoPublicKey);
-
-    return $rsa->verify($timestamp, base64_decode($signature));
-}
 
 /**
  * Access token
@@ -191,12 +22,82 @@ function yopify_yo_get_access_token()
 {
     $yopifyYoAccessToken = get_option('yopify_yo_access_token');
 
-    if ($yopifyYoAccessToken == null || $yopifyYoAccessToken === false) {
-        $yopifyYoAccessToken = hash('sha256', getUtcTimestamp() . uniqid());
-        add_option('yopify_yo_access_token', $yopifyYoAccessToken);
+    return $yopifyYoAccessToken;
+}
+
+/**
+ * Current app
+ * @return string
+ */
+function yopify_yo_get_wc_app()
+{
+    $yopifyYoWcAppId = (int)get_option('yopify_yo_wc_app_id');
+
+    return $yopifyYoWcAppId;
+}
+
+/**
+ * Set access token
+ */
+function yopify_yo_set_access_token()
+{
+    $response = [
+        'success' => false
+    ];
+
+    if (isset($_POST['token']) && $_POST['token']) {
+        if (update_option('yopify_yo_access_token', $_POST['token'])) {
+
+        }
+
+        $response = [
+            'success' => true
+        ];
     }
 
-    return $yopifyYoAccessToken;
+    echo json_encode($response);
+    die;
+}
+
+/**
+ * Set current app
+ */
+function yopify_yo_set_current_app()
+{
+    $response = [
+        'success' => false
+    ];
+
+    if (isset($_POST['app_id']) && $_POST['app_id']) {
+        update_option('yopify_yo_wc_app_id', $_POST['app_id']);
+        update_option('yopify_yo_client_id', $_POST['client_id']);
+
+        $response = [
+            'success' => true
+        ];
+    }
+
+    echo json_encode($response);
+    die;
+}
+
+/**
+ * Verify Token
+ *
+ * @param $yopifyYoAccessToken
+ *
+ * @return mixed
+ */
+function yopify_yo_verify_token($yopifyYoAccessToken)
+{
+    // Initialize Yo client
+    $yoClient = new Yopify_Yo_Client();
+
+    // Set auth token
+    $yoClient->authToken = $yopifyYoAccessToken ? $yopifyYoAccessToken : yopify_yo_get_access_token();
+    $yoClient->appId = yopify_yo_get_wc_app();
+
+    return $yoClient->ping(null, true);
 }
 
 /**
@@ -205,4 +106,173 @@ function yopify_yo_get_access_token()
 function getUtcTimestamp()
 {
     return time() - date('Z');
+}
+
+/**
+ * Count total orders
+ */
+function yopify_yo_count_orders()
+{
+    // Initialize Yo client
+    $yoClient = new Yopify_Yo_Client();
+
+    // Set auth token
+    $yoClient->authToken = yopify_yo_get_access_token();
+    $yoClient->appId = yopify_yo_get_wc_app();
+
+    $response = [
+        'status' => 0
+    ];
+
+    if ($yoClient->ping()) {
+        $status = isset($requestBody['status']) ? $requestBody['status'] : 'wc-completed, wc-processing, publish';
+        $limit = isset($requestBody['limit']) ? $requestBody['limit'] : 250;
+        $page = isset($requestBody['page']) ? $requestBody['page'] : 1;
+        $orderBy = isset($requestBody['order']) ? $requestBody['order'] : 'DESC';
+        $results = [];
+
+        // Fetch orders
+        $postsCount = wp_count_posts('shop_order');
+        $count = 0;
+
+        if ($status) {
+
+            $statuses = array_filter(array_map('trim', explode(',', $status)));
+
+            foreach ($statuses as $status) {
+                $count += isset($postsCount->$status) ? $postsCount->$status : 0;
+            }
+        }
+
+        $response = ['status' => 1, 'count' => $status ? $count : $postsCount];
+    }else {
+        $response['error'] = "You are not authenticated with Yo. <a href='" . admin_url('?page=yo') . "'><b>Click here</b></a> to start authentication.";
+    }
+
+    echo json_encode($response);
+    die;
+}
+
+/**
+ * Sync orders with yo
+ */
+function yopify_yo_sync_orders()
+{
+    set_time_limit(0);
+
+    $requestBody = $_REQUEST;
+
+    $status = isset($requestBody['status']) ? $requestBody['status'] : 'wc-completed, wc-processing, publish';
+    $limit = isset($requestBody['limit']) ? $requestBody['limit'] : 1;
+    $page = isset($requestBody['page']) ? $requestBody['page'] : 1;
+    $orderBy = isset($requestBody['order']) ? $requestBody['order'] : 'DESC';
+    $dateAfter = isset($requestBody['date_after']) ? $requestBody['date_after'] : '';
+    $results = [];
+
+    $args = [
+        'post_type'      => 'shop_order',
+        'post_status'    => $status,
+        'numberposts'    => $limit,
+        'posts_per_page' => $limit,
+        'offset'         => ($page - 1) * $limit,
+        'order'          => $orderBy
+    ];
+
+    if ($status) {
+        $statuses = array_filter(array_map('trim', explode(',', $status)));
+
+        if ($statuses) {
+            $args['post_status'] = $statuses;
+        }
+    }
+
+    if ($dateAfter) {
+        $args['date_query'] = [
+            [
+                'after' => date('c', $dateAfter)
+            ]
+        ];
+    }
+
+    // Fetch orders
+    $orders = get_posts($args);
+
+    $response['status'] = 1;
+
+    foreach ($orders as $orderPost) {
+        $order = new WC_Order();
+        $order->populate($orderPost);
+
+        $responseData = pushOrder($order);
+
+        if (isset($responseData->status_code) && $responseData->status_code != 200) {
+            $response['status'] = 0;
+            $response['error'] = 'Error: ' . (isset($responseData->message) ? $responseData->message : 'An error has occurred while syncing orders.');
+            break;
+        }
+    }
+
+    echo json_encode($response);
+    die;
+
+}
+
+/**
+ * Push order to yo
+ *
+ * @param $order
+ *
+ * @return mixed|null
+ */
+function pushOrder($order)
+{
+    set_time_limit(0);
+    
+    $yoClient = new Yopify_Yo_Client();
+
+    $yoClient->authToken = yopify_yo_get_access_token();
+    $yoClient->appId = yopify_yo_get_wc_app();
+
+    $items = $order->get_items();
+    $yoEvent = null;
+    $countryName = new WC_Countries();
+
+    foreach ($items as $order_id => $item) {
+
+        $product_id = $item["item_meta"]["_product_id"][0];
+        $product = new WC_Product($product_id);
+
+        $thumbnailImage = wp_get_attachment_image_src($product->get_image_id());
+        $thumbnailImage = isset($thumbnailImage['0']) && $thumbnailImage['0'] ? $thumbnailImage['0'] : wp_get_attachment_url($product->get_image_id());
+
+        $event = new Yopify_Yo_Event();
+        $event->unique_id1 = $order->id;
+        $event->unique_id2 = $product_id;
+        $event->title = $product->get_title();
+        $event->first_name = $order->billing_first_name ? $order->billing_first_name : $order->shipping_first_name;
+        $event->last_name = $order->billing_last_name ? $order->billing_last_name : $order->shipping_last_name;
+        $event->city = $order->billing_city ? $order->billing_city : $order->shipping_city;
+        $event->province = $countryName->get_states($order->billing_country)[$order->billing_state] ? $countryName->get_states($order->billing_country)[$order->billing_state] : $countryName->get_states($order->shipping_country)[$order->shipping_state];
+        $event->country = $countryName->get_countries()[$order->billing_country] ? $countryName->get_countries()[$order->billing_country] : $countryName->get_countries()[$order->shipping_country];
+        $event->url = $product->get_permalink();
+        $event->image_url = $thumbnailImage;
+
+        $yoEvent = $yoClient->createEvent($event);
+    }
+
+    return $yoEvent;
+}
+
+/**
+ * Catch latest order
+ *
+ * @param $order_id
+ *
+ * @return mixed|null
+ */
+function catchSingleOrder($order_id)
+{
+    $order = $order_id ? new WC_Order($order_id) : null;
+
+    return pushOrder($order);
 }

@@ -3,7 +3,7 @@ Contributors: Yopify
 Tags: plugin, sales, shop, store, e-commerce,ecommerce, notification, orders, woocommerce, wordpress, social, products, post, posts, integration, dashboard, cart, share, sharing, automatic, API
 Requires at least: 4.4
 Tested up to: 4.6.1
-Stable tag: 1.0.0
+Stable tag: 2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -129,6 +129,9 @@ Yo is still perfect for your store, here is how it will work:
 
 = 1.0.0 =
 Initial Release
+
+= 2.0.0 =
+Major update
 
 == Upgrade Notice ==
 * All future updates are free of cost
