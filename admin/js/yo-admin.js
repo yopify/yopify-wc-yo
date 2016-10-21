@@ -2,6 +2,11 @@
 {
     'use strict';
 
+    var syncLogsHolder = $( '#yopify-yo-sync-logs' );
+    var $yopifyYoAllowAccessHolder = $( '#yopifyYoAllowAccessHolder' );
+    var $yopifyYoAccessButton = $( '#yopifyYoAllowAccessButton' );
+    var $yopifyYoProgressBar = $( '.progress-bar-holder .progress' );
+
     if( typeof yopifyYoCheckLoginUrl != "undefined" )
     {
         $.getJSON( yopifyYoCheckLoginUrl, function( response )
@@ -12,16 +17,16 @@
 
                 if( myApps )
                 {
-                    $( '#yopifyYoAllowAccessHolder h3' ).text( "Verification required" );
+                    $yopifyYoAllowAccessHolder.find( 'h3' ).text( "Verification required" );
 
                     var user = response.user;
                     var selectAppOptionsHtml = '';
 
                     if( myApps.length > 1 )
                     {
-                        $( '#yopifyYoAllowAccessHolder h3' ).text( "Verification required" );
+                        $yopifyYoAllowAccessHolder.find( 'h3' ).text( "Verification required" );
 
-                        $( '#yopifyYoAllowAccessButton' ).text( "Accept" ).attr( 'href', yopifyYoCreateTokensUrl ).data( 'select-app', 0 );
+                        $yopifyYoAccessButton.text( "Accept" ).attr( 'href', yopifyYoCreateTokensUrl ).data( 'select-app', 0 );
                         $( '#yopifyYoAllowAccessHolder' ).show();
 
                         $.each( myApps, function( index, app )
@@ -36,16 +41,19 @@
                         selectAppOptionsHtml += '<option value="' + app.app_id + '" selected data-clientid="' + app.client_id + '">' + app.app_id + ' | ' + app.title + ' | ' + app.url + '</option>';
                     }
 
-                    $( '#yopifyYoAllowAccessButton' ).text( "Accept" ).attr( 'href', 'javascript:void(0);' ).data( 'select-app', 1 );
-                    $( '#yopifyYoAllowAccessHolder p' ).html( "<div class='form-label-area'>Name:</div> <div class='form-value-area'> " + user.name + "</div> <div class='form-label-area'> Email: </div>  <div class='form-value-area email-overlow'>" + user.email + " </div> <div class='form-label-area'>App:</div> <div class='form-value-area'> <div class='custom-select'><select id='yopify_yo_selected_app'><option value=''>Select your app</option>" + selectAppOptionsHtml + "</select></div></div><br /><br /><div class='form-text'>Please select the correct app and click Accept if this is the correct account.</div>" );
+                    $yopifyYoAccessButton.text( "Accept" ).attr( 'href', 'javascript:void(0);' ).data( 'select-app', 1 );
+                    $yopifyYoAllowAccessHolder.find( 'p' ).html( "<div class='form-label-area'>Name:</div> <div class='form-value-area'> " + user.name + "</div> <div class='form-label-area'> Email: </div>  <div class='form-value-area email-overlow'>" + user.email + " </div> <div class='form-label-area'>App:</div> <div class='form-value-area'> <div class='custom-select'><select id='yopify_yo_selected_app'><option value=''>Select your app</option>" + selectAppOptionsHtml + "</select></div></div><br /><br /><div class='form-text'>Please select the correct app and click Accept if this is the correct account.</div>" );
                     $( '#switchAccount' ).show();
-                    $( '#yopifyYoAllowAccessHolder' ).show();
+                    $yopifyYoAllowAccessHolder.show();
                 }
+
+                $( '.yo_loading' ).hide();
             }
             else
             {
-                $( '#yopifyYoAllowAccessHolder' ).show();
-                $( '#yopifyYoAllowAccessButton' ).attr( 'href', yopifyYoLoginUrl ).attr( 'target', '_blank' ).data( 'select-app', 0 );
+                $( '.yo_loading' ).hide();
+                $yopifyYoAllowAccessHolder.show();
+                $yopifyYoAccessButton.attr( 'href', yopifyYoLoginUrl ).attr( 'target', '_blank' ).data( 'select-app', 0 );
             }
         } );
 
@@ -60,6 +68,8 @@
                 alert( "Please select app." );
                 return false;
             }
+
+            $( '.yo_loading' ).show();
 
             $.post( yopifyYoSetCurrentAppUrl, {
                 'app_id': $( '#yopify_yo_selected_app' ).val(),
@@ -80,25 +90,35 @@
 
                                 if( response && response.success )
                                 {
-                                    window.location.reload();
+                                    if( confirm( "Success: Do you want to sync your store's orders with Yo now?" ) )
+                                    {
+                                        window.location.href = yopifyYoSyncOrdersUrl;
+                                    }
+                                    else
+                                    {
+                                        window.location.reload();
+                                    }
                                 }
                                 else
                                 {
+                                    $( '.yo_loading' ).hide();
                                     alert( "An unknown error has occurred while setting up token" );
                                 }
                             }, 'json' )
                         }
                         else if( response.code == 401 )
                         {
-                            $( '#yopifyYoAllowAccessHolder' ).show();
-                            $( '#yopifyYoAllowAccessButton' ).attr( 'href', yopifyYoLoginUrl ).attr( 'target', '_blank' ).data( 'select-app', 0 );
+                            $( '.yo_loading' ).hide();
+                            $yopifyYoAllowAccessHolder.show();
+                            $yopifyYoAccessButton.attr( 'href', yopifyYoLoginUrl ).attr( 'target', '_blank' ).data( 'select-app', 0 );
                         }
                         else if( response.code == 404 )
                         {
-                            $( '#yopifyYoAllowAccessHolder h3' ).text( "A token is required" );
-                            $( '#yopifyYoAllowAccessHolder p' ).text( "Clicking 'Create Token' button will redirect you to a page where you can create a token. Once token is created, Please refresh this window." );
-                            $( '#yopifyYoAllowAccessButton' ).text( "Create Token" ).attr( 'href', yopifyYoCreateTokensUrl ).attr( 'target', '_blank' ).data( 'select-app', 0 );
-                            $( '#yopifyYoAllowAccessHolder' ).show();
+                            $( '.yo_loading' ).hide();
+                            $yopifyYoAllowAccessHolder.find( 'h3' ).text( "A token is required" );
+                            $yopifyYoAllowAccessHolder.find( 'p' ).text( "Clicking 'Create Token' button will redirect you to a page where you can create a token. Once token is created, Please refresh this window." );
+                            $yopifyYoAccessButton.text( "Create Token" ).attr( 'href', yopifyYoCreateTokensUrl ).attr( 'target', '_blank' ).data( 'select-app', 0 );
+                            $yopifyYoAllowAccessHolder.show();
                         }
                         else
                         {
@@ -108,6 +128,7 @@
                 }
                 else
                 {
+                    $( '.yo_loading' ).hide();
                     alert( "An unknown error has occurred while setting up app" );
                 }
             }, 'json' )
@@ -130,7 +151,7 @@
                     if( response.status == '1' )
                     {
                         var step = Math.ceil( 100 / totalOrders );
-                        $( '.progress-bar-holder .progress' ).css( {
+                        $yopifyYoProgressBar.css( {
                             width: (step * pageNo) + '%'
                         } );
 
@@ -141,19 +162,22 @@
                         }
                         else
                         {
-                            $( '#yopify-yo-sync-logs' ).prepend( '<li>Sync completed.</li>' );
+                            syncLogsHolder.prepend( '<li>Sync completed.</li>' );
+                            syncLogsHolder.prepend( '<li><a href="' + yopifyYoDashboardUrl + '">Click here</a> to go to Yo dashboard.</li>' );
                         }
                     }
                     else
                     {
-                        $( '#yopify-yo-sync-logs' ).prepend( '<li>' + pageNo + ' order(s) were synced.</li>' );
-                        $( '#yopify-yo-sync-logs' ).prepend( '<li class="error">' + (typeof response.error != "undefined" ? response.error : "Unknown error") + ' Please try after 1 hour.</li>' );
+                        syncLogsHolder.prepend( '<li>' + pageNo + ' order(s) were synced.</li>' );
+                        syncLogsHolder.prepend( '<li class="error">' + (typeof response.error != "undefined" ? response.error : "Unknown error") + ' Please try after 1 hour.</li>' );
+                        syncLogsHolder.prepend( '<li><a href="' + yopifyYoDashboardUrl + '">Click here</a> to go to Yo dashboard.</li>' );
                     }
                 } );
             }
             else
             {
-                $( '#yopify-yo-sync-logs' ).prepend( '<li>Sync completed.</li>' );
+                syncLogsHolder.prepend( '<li>Sync completed.</li>' );
+                syncLogsHolder.prepend( '<li><a href="' + yopifyYoDashboardUrl + '">Click here</a> to go to Yo dashboard.</li>' );
             }
         }
 
@@ -165,7 +189,7 @@
         {
             $( this ).hide();
             $( '.yopify-yo-sync-orders-container' ).show();
-            $( '#yopify-yo-sync-logs' ).prepend( '<li>Counting orders...</li>' );
+            syncLogsHolder.prepend( '<li>Counting orders...</li>' );
             $.getJSON( ajaxurl + '?action=yopify_yo_count_orders', function( response )
             {
                 response = $.parseJSON( JSON.stringify( response ) );
@@ -176,8 +200,8 @@
 
                     if( totalOrders > 0 )
                     {
-                        $( '#yopify-yo-sync-logs' ).prepend( '<li>' + totalOrders + ' order(s) found. Sync starting...</li>' );
-                        $( '#yopify-yo-sync-logs' ).prepend( '<li>Sync in progress</li>' );
+                        syncLogsHolder.prepend( '<li>' + totalOrders + ' order(s) found. Sync starting...</li>' );
+                        syncLogsHolder.prepend( '<li>Sync in progress</li>' );
 
                         totalOrders = totalOrders > 35 ? 35 : totalOrders;
                         $( '#totalOrdersCount' ).text( totalOrders );
@@ -186,17 +210,19 @@
                     }
                     else
                     {
-                        $( '#yopify-yo-sync-logs' ).prepend( '<li>No order was found.</li>' );
+                        syncLogsHolder.prepend( '<li>No order was found.</li>' );
                         $( '#totalOrdersCount' ).text( totalOrders );
-                        $( '.progress-bar-holder .progress' ).css( {
+                        $yopifyYoProgressBar.css( {
                             width: '100%'
                         } );
+                        syncLogsHolder.prepend( '<li><a href="' + yopifyYoDashboardUrl + '">Click here</a> to go to Yo dashboard.</li>' );
                     }
 
                 }
                 else
                 {
-                    $( '#yopify-yo-sync-logs' ).prepend( '<li class="error">' + (typeof response.error != "undefined" ? response.error : "Unknown error") + '</li>' );
+                    syncLogsHolder.prepend( '<li class="error">' + (typeof response.error != "undefined" ? response.error : "Unknown error") + '</li>' );
+                    syncLogsHolder.prepend( '<li><a href="' + yopifyYoDashboardUrl + '">Click here</a> to go to Yo dashboard.</li>' );
                 }
             } );
         } );

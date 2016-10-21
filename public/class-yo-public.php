@@ -101,8 +101,10 @@ class Yopify_Yo_Public
         // wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/yo-public.js', array('jquery'), $this->version, false);;
 
         $clientId = get_option('yopify_yo_client_id');
+        $currentAppId = yopify_yo_get_wc_app();
+        $accessToken = yopify_yo_get_access_token();
 
-        if ($clientId) {
+        if ($clientId && $accessToken && $currentAppId) {
             wp_enqueue_script('yopify-yo-js', YOPIFY_YO_BASE_URL . '/js/yo/' . $clientId . '/bootstrap.js', false);
         }
     }

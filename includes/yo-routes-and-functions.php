@@ -227,7 +227,7 @@ function yopify_yo_sync_orders()
 function pushOrder($order)
 {
     set_time_limit(0);
-    
+
     $yoClient = new Yopify_Yo_Client();
 
     $yoClient->authToken = yopify_yo_get_access_token();

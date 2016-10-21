@@ -62,7 +62,8 @@ function yopify_yo_sync_orders_callback()
 {
     ?>
     <script type="text/javascript">
-        var yopifyYoSyncOrdersUrl = ajaxurl + "?action=yopify_yo_sync_orders"
+        var yopifyYoSyncOrdersUrl = ajaxurl + "?action=yopify_yo_sync_orders";
+        var yopifyYoDashboardUrl = '<?php echo admin_url('?page=yo'); ?>';
     </script>
 
     <a id="yopify_yo_start_sync" href="javascript:void(0);">Click here to sync orders. </a>
@@ -96,7 +97,6 @@ function yopify_yo_init_page()
         $yopifyYoAuthUrl = YOPIFY_YO_BASE_URL . '/auth/login?app_id=' . yopify_yo_get_wc_app() . '&api_token=' . $yopifyYoAccessToken;
 
         ?>
-
         <iframe id="yopifyYoBackEndIframe" src="<?php echo $yopifyYoAuthUrl; ?>" style="width:100%; min-height:500px;" frameborder="no"></iframe>
         <?php
     }else {
@@ -113,10 +113,12 @@ function yopify_yo_init_page()
             var yopifyYoGetAccessTokenUrl = '<?php echo $url; ?>';
             var yopifyYoSetAccessTokenUrl = '<?php echo admin_url('admin-ajax.php'); ?>' + '?action=yopify_yo_set_access_token';
             var yopifyYoSetCurrentAppUrl = '<?php echo admin_url('admin-ajax.php'); ?>' + '?action=yopify_yo_set_current_app';
+            var yopifyYoSyncOrdersUrl = '<?php echo admin_url('?page=yopify_yo_sync_orders'); ?>';
+            var yopifyYoDashboardUrl = '<?php echo admin_url('?page=yo'); ?>';
         </script>
 
         <div class="allow-access" id="yopifyYoAllowAccessHolder" style="display: none">
-            <a href="https://yopify.com" target="_blank" class="logo-holder"><img src="https://yopify.com/images/yo/logo.png" class="app-logo"
+            <a href="https://yopify.com" target="_blank" class="logo-holder"><img src="<?php echo YOPIFY_YO_PLUGIN_URL; ?>assets/logo.png" class="app-logo"
                                                                                   alt="Yo App"/></a>
 
             <h3>You are not logged in.</h3>
@@ -126,6 +128,10 @@ function yopify_yo_init_page()
             <div class="action-btns">
                 <a class="allow-btn left-button" id="switchAccount" href="<?php echo YOPIFY_YO_BASE_URL . '/logout' ?>" target="_blank">Switch account</a>
                 <a class="allow-btn right-button" href="javascript:void(0)" id="yopifyYoAllowAccessButton"><?php _e('Login', 'woocommerce-plugin-yo'); ?></a>
+            </div>
+
+            <div class='yo_loading' style='display: none;'>
+                <div class='cssload-box-loading'></div>
             </div>
         </div>
         <?php

@@ -21,7 +21,7 @@ if ( ! defined('WPINC')) {
 
 define('YOPIFY_YO_BASE_URL', 'https://yopify.com/api/yo');
 define('YOPIFY_YO_VERSION', '1.0');
-define('YOPIFY_YO_PLUGIN_URL', str_replace(home_url(), '', plugins_url('/', __FILE__)));
+define('YOPIFY_YO_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 if ( ! class_exists('YopifyYo_Client')) {
     require_once plugin_dir_path(__FILE__) . 'includes/sdk/Client.php';
