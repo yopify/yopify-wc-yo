@@ -20,6 +20,7 @@ if ( ! defined('WPINC')) {
 }
 
 define('YOPIFY_YO_BASE_URL', 'https://yopify.com/api/yo');
+define('YOPIFY_YO_API_BASE_URL', 'https://yopify.com/api/yo/v1');
 define('YOPIFY_YO_VERSION', '1.0');
 define('YOPIFY_YO_PLUGIN_URL', plugin_dir_url(__FILE__));
 

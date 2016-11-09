@@ -34,7 +34,7 @@ class Yopify_Yo_Client
     /**
      * @var string Yo server endpoint
      */
-    private $endpoint = YOPIFY_YO_BASE_URL . '/v1';
+    private $endpoint = YOPIFY_YO_API_BASE_URL;
 
     /**
      * @var array
