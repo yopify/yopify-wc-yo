@@ -4,7 +4,7 @@
  * Plugin Name:       Yo - Display Recent Sales in Real Time
  * Plugin URI:        https://yopify.com
  * Description:       Instantly replicate the atmosphere of a busy retail store and give your visitors the motivation and social proof to BUY!
- * Version:           2.0.1
+ * Version:           2.0.2
  * Author:            Yopify
  * Author URI:        http://yopify.com
  * License:           GPL-2.0+

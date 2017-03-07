@@ -2,8 +2,8 @@
 Contributors: Yopify
 Tags: plugin, sales, shop, store, e-commerce,ecommerce, notification, orders, woocommerce, wordpress, social, products, post, posts, integration, dashboard, cart, share, sharing, automatic, API
 Requires at least: 4.4
-Tested up to: 4.6.1
-Stable tag: 2.0.1
+Tested up to: 4.7.3
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -132,6 +132,9 @@ Initial Release
 
 = 2.0.0 =
 Major update
+
+= 2.0.2 =
+Update sync limit to 250 orders
 
 == Upgrade Notice ==
 * All future updates are free of cost

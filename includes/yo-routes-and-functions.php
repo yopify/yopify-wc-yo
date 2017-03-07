@@ -126,7 +126,7 @@ function yopify_yo_count_orders()
 
     if ($yoClient->ping()) {
         $status = isset($requestBody['status']) ? $requestBody['status'] : 'wc-completed, wc-processing, publish';
-        $limit = isset($requestBody['limit']) ? $requestBody['limit'] : 250;
+        $limit = isset($requestBody['limit']) ? $requestBody['limit'] : 500;
         $page = isset($requestBody['page']) ? $requestBody['page'] : 1;
         $orderBy = isset($requestBody['order']) ? $requestBody['order'] : 'DESC';
         $results = [];
@@ -203,14 +203,23 @@ function yopify_yo_sync_orders()
         $order = new WC_Order();
         $order->populate($orderPost);
 
-        $responseData = pushOrder($order);
+        try{
+            $responseData = pushOrder($order);
 
-        if (isset($responseData->status_code) && $responseData->status_code != 200) {
-            $response['status'] = 0;
-            $response['error'] = 'Error: ' . (isset($responseData->message) ? $responseData->message : 'An error has occurred while syncing orders.');
-            break;
+            if (isset($responseData->status_code) && $responseData->status_code != 200) {
+                $response['status'] = 0;
+                $response['errors'][] = 'Error: ' . (isset($responseData->message) ? $responseData->message : 'An error has occurred while syncing orders.');
+                break;
+            }
+        }catch (\Exception $e){
+            $response['errors'][] = 'Exception: ' . $e->getMessage();
         }
     }
+
+    if (isset($response['errors'])) {
+        $response['errors'] = implode('<br />', $response['errors']);
+    }
+
 
     echo json_encode($response);
     die;
@@ -245,19 +254,21 @@ function pushOrder($order)
         $thumbnailImage = wp_get_attachment_image_src($product->get_image_id());
         $thumbnailImage = isset($thumbnailImage['0']) && $thumbnailImage['0'] ? $thumbnailImage['0'] : wp_get_attachment_url($product->get_image_id());
 
-        $event = new Yopify_Yo_Event();
-        $event->unique_id1 = $order->id;
-        $event->unique_id2 = $product_id;
-        $event->title = $product->get_title();
-        $event->first_name = $order->billing_first_name ? $order->billing_first_name : $order->shipping_first_name;
-        $event->last_name = $order->billing_last_name ? $order->billing_last_name : $order->shipping_last_name;
-        $event->city = $order->billing_city ? $order->billing_city : $order->shipping_city;
-        $event->province = $countryName->get_states($order->billing_country)[$order->billing_state] ? $countryName->get_states($order->billing_country)[$order->billing_state] : $countryName->get_states($order->shipping_country)[$order->shipping_state];
-        $event->country = $countryName->get_countries()[$order->billing_country] ? $countryName->get_countries()[$order->billing_country] : $countryName->get_countries()[$order->shipping_country];
-        $event->url = $product->get_permalink();
-        $event->image_url = $thumbnailImage;
+        if ($product->get_title()) {
+            $event = new Yopify_Yo_Event();
+            $event->unique_id1 = $order->id;
+            $event->unique_id2 = $product_id;
+            $event->title = $product->get_title();
+            $event->first_name = $order->billing_first_name ? $order->billing_first_name : $order->shipping_first_name;
+            $event->last_name = $order->billing_last_name ? $order->billing_last_name : $order->shipping_last_name;
+            $event->city = $order->billing_city ? $order->billing_city : $order->shipping_city;
+            $event->province = $countryName->get_states($order->billing_country)[$order->billing_state] ? $countryName->get_states($order->billing_country)[$order->billing_state] : $countryName->get_states($order->shipping_country)[$order->shipping_state];
+            $event->country = $countryName->get_countries()[$order->billing_country] ? $countryName->get_countries()[$order->billing_country] : $countryName->get_countries()[$order->shipping_country];
+            $event->url = $product->get_permalink();
+            $event->image_url = $thumbnailImage;
 
-        $yoEvent = $yoClient->createEvent($event);
+            $yoEvent = $yoClient->createEvent($event);
+        }
     }
 
     return $yoEvent;

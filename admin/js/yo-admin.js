@@ -151,8 +151,11 @@
                     if( response.status == '1' )
                     {
                         var step = Math.ceil( 100 / totalOrders );
+                        var currentPercentage = step * pageNo;
+                        currentPercentage = currentPercentage > 100 ? 100 : currentPercentage;
+
                         $yopifyYoProgressBar.css( {
-                            width: (step * pageNo) + '%'
+                            width: currentPercentage + '%'
                         } );
 
                         if( totalOrders > pageNo )
@@ -203,7 +206,7 @@
                         syncLogsHolder.prepend( '<li>' + totalOrders + ' order(s) found. Sync starting...</li>' );
                         syncLogsHolder.prepend( '<li>Sync in progress</li>' );
 
-                        totalOrders = totalOrders > 35 ? 35 : totalOrders;
+                        totalOrders = totalOrders > 250 ? 250 : totalOrders;
                         $( '#totalOrdersCount' ).text( totalOrders );
 
                         yopifyYoSyncOrders( 1, totalOrders );
