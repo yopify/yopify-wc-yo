@@ -150,7 +150,7 @@
                 {
                     if( response.status == '1' )
                     {
-                        var step = Math.ceil( 100 / totalOrders );
+                        var step = 100 / totalOrders;
                         var currentPercentage = step * pageNo;
                         currentPercentage = currentPercentage > 100 ? 100 : currentPercentage;
 
@@ -233,4 +233,3 @@
     }
 
 })( jQuery );
-

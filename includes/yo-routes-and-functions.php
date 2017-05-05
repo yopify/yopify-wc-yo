@@ -200,12 +200,11 @@ function yopify_yo_sync_orders()
     $response['status'] = 1;
 
     foreach ($orders as $orderPost) {
-        $order = new WC_Order();
-        $order->populate($orderPost);
+        $order = new WC_Order($orderPost->ID);
 
         try{
             $responseData = pushOrder($order);
-
+            $response['data'] = $responseData;
             if (isset($responseData->status_code) && $responseData->status_code != 200) {
                 $response['status'] = 0;
                 $response['errors'][] = 'Error: ' . (isset($responseData->message) ? $responseData->message : 'An error has occurred while syncing orders.');
@@ -233,7 +232,7 @@ function yopify_yo_sync_orders()
  *
  * @return mixed|null
  */
-function pushOrder($order)
+function pushOrder($order, $orderItems = null)
 {
     set_time_limit(0);
 
@@ -242,13 +241,35 @@ function pushOrder($order)
     $yoClient->authToken = yopify_yo_get_access_token();
     $yoClient->appId = yopify_yo_get_wc_app();
 
-    $items = $order->get_items();
+    $items = $orderItems ? $orderItems : $order->get_items();
     $yoEvent = null;
     $countryName = new WC_Countries();
 
     foreach ($items as $order_id => $item) {
 
-        $product_id = $item["item_meta"]["_product_id"][0];
+        if (! isset($item["item_meta"]["_product_id"][0])) {
+            $orderData = $order->get_data();
+
+            $itemData = $item->get_data();
+            $product_id = $itemData['product_id'];
+            $order_id = $itemData['order_id'];
+
+            $first_name = $orderData['billing']['first_name'] ? $orderData['billing']['first_name'] : $orderData['shipping']['first_name'];
+            $last_name = $orderData['billing']['last_name'] ? $orderData['billing']['last_name'] : $orderData['shipping']['last_name'];
+            $city = $orderData['billing']['city'] ? $orderData['billing']['city'] : $orderData['shipping']['city'];
+            $state = $orderData['billing']['state'] ? $orderData['billing']['state'] : $orderData['shipping']['state'];
+            $country = $orderData['billing']['country'] ? $orderData['billing']['country'] : $orderData['shipping']['country'];
+        }else {
+            $order_id = $order->id;
+            $product_id = $item["item_meta"]["_product_id"][0];
+
+            $first_name = $order->billing_first_name ? $order->billing_first_name : $order->shipping_first_name;
+            $last_name = $order->billing_last_name ? $order->billing_last_name : $order->shipping_last_name;
+            $city = $order->billing_city ? $order->billing_city : $order->shipping_city;;
+            $state = $order->billing_state ? $order->billing_state : $order->shipping_state;
+            $country = $order->billing_country ? $order->billing_country : $order->shipping_country;
+        }
+
         $product = new WC_Product($product_id);
 
         $thumbnailImage = wp_get_attachment_image_src($product->get_image_id());
@@ -256,14 +277,14 @@ function pushOrder($order)
 
         if ($product->get_title()) {
             $event = new Yopify_Yo_Event();
-            $event->unique_id1 = $order->id;
+            $event->unique_id1 = $order_id;
             $event->unique_id2 = $product_id;
             $event->title = $product->get_title();
-            $event->first_name = $order->billing_first_name ? $order->billing_first_name : $order->shipping_first_name;
-            $event->last_name = $order->billing_last_name ? $order->billing_last_name : $order->shipping_last_name;
-            $event->city = $order->billing_city ? $order->billing_city : $order->shipping_city;
-            $event->province = $countryName->get_states($order->billing_country)[$order->billing_state] ? $countryName->get_states($order->billing_country)[$order->billing_state] : $countryName->get_states($order->shipping_country)[$order->shipping_state];
-            $event->country = $countryName->get_countries()[$order->billing_country] ? $countryName->get_countries()[$order->billing_country] : $countryName->get_countries()[$order->shipping_country];
+            $event->first_name = $first_name;
+            $event->last_name = $last_name;
+            $event->city = $city;
+            $event->province = $country && $state ? $countryName->get_states($country)[$state] : '';
+            $event->country = $country ? $countryName->get_countries()[$country] : '';
             $event->url = $product->get_permalink();
             $event->image_url = $thumbnailImage;
 

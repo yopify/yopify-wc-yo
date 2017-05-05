@@ -105,7 +105,42 @@ class Yopify_Yo_Public
         $accessToken = yopify_yo_get_access_token();
 
         if ($clientId && $accessToken && $currentAppId) {
-            wp_enqueue_script('yopify-yo-js', YOPIFY_YO_BASE_URL . '/js/yo/' . $clientId . '/bootstrap.js', false);
+
+            if (strtolower(get_option('yopify_yo_deferred_load')) == "true") {
+
+                add_action('wp_footer', function (){
+                    ?>
+                    <script type="text/javascript">
+                        (function()
+                        {
+                            function loadYo()
+                            {
+                                var url = "<?php echo YOPIFY_YO_BASE_URL . '/js/yo/' . get_option('yopify_yo_client_id') . '/bootstrap.js'; ?>";
+                                if( url )
+                                {
+                                    var s = document.createElement( 'script' );
+                                    s.type = 'text/javascript';
+                                    s.async = true;
+                                    s.src = url;
+                                    var x = document.getElementsByTagName( 'script' )[0];
+                                    x.parentNode.insertBefore( s, x );
+                                }
+                            };
+                            if( window.attachEvent )
+                            {
+                                window.attachEvent( 'onload', loadYo );
+                            }
+                            else
+                            {
+                                window.addEventListener( 'load', loadYo, false );
+                            }
+                        })();
+                    </script>
+                    <?php
+                });
+            }else {
+                wp_enqueue_script('yopify-yo-js', YOPIFY_YO_BASE_URL . '/js/yo/' . $clientId . '/bootstrap.js', false);
+            }
         }
     }
 }

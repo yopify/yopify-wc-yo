@@ -68,7 +68,7 @@ function yopify_yo_sync_orders_callback()
 
     <a id="yopify_yo_start_sync" href="javascript:void(0);">Click here to sync orders. </a>
     <div class="yopify-yo-sync-orders-container" style="display: none;">
-        <h2>Total Orders: <span id="totalOrdersCount"></span></h2>
+        <h2>Sync Maximum Orders: <span id="totalOrdersCount"></span></h2>
         <div class="progress-bar-holder" style="width: 500px; padding-top: 4px; padding-bottom: 4px; background: #ffffff; border: 1px solid;">
             <div class="progress" style="background: #4F800D; width: 0; padding-top: 4px; padding-bottom: 4px;"></div>
         </div>

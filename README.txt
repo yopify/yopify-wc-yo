@@ -2,8 +2,8 @@
 Contributors: Yopify
 Tags: plugin, sales, shop, store, e-commerce,ecommerce, notification, orders, woocommerce, wordpress, social, products, post, posts, integration, dashboard, cart, share, sharing, automatic, API
 Requires at least: 4.4
-Tested up to: 4.7.3
-Stable tag: 2.0.2
+Tested up to: 4.7.4
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -110,12 +110,14 @@ Yo is still perfect for your store, here is how it will work:
 **Keeping your store looking busy** - You can set Yo to display orders from the past such from one or two weeks ago (you can edit this to whatever you like) to display, and orders within that period will display, just without the time stamp. This helps your store looking lively and busy with pop-ups displaying regularly (and they're genuine orders)
 **Time between orders displaying** - You can set how often orders will show up (once every 10 seconds, every 30 seconds, etc)
 
+**Deferred Loading** - Add an option in options table with label "yopify_yo_deferred_load" and value "true"
+
 **IT'S SIMPLE - IT'S FUN - IT'S YO!**
 
 == Screenshots ==
 
 1. Notifications settings customization
-2. List of products including in the notifications. 
+2. List of products including in the notifications.
 3. List of orders for which notifications will be displayed.
 4. Notifications settings customization [Small Screens]
 5. List of products including in the notifications. [Small Screens]
@@ -135,6 +137,13 @@ Major update
 
 = 2.0.2 =
 Update sync limit to 250 orders
+
+= 2.1.0 =
+Compatibility with WooCommerce 3+
+Fixes progress bar
+
+= 2.1.1 =
+Add optional deferred loading option
 
 == Upgrade Notice ==
 * All future updates are free of cost
